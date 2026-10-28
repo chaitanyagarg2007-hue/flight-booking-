@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyTrip - Flight Booking</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <div id="app">
+        <nav class="bg-blue-600 shadow-md">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex-shrink-0">
+                        <span class="text-white text-2xl font-bold cursor-pointer" id="navTitle">✈️ MyTrip</span>
+                    </div>
+                    <div class="flex items-center space-x-4" id="navButtons">
+                        </div>
+                </div>
+            </div>
+        </nav>
+        
+        <main class="p-6">
+            <h3 id="globalMessage" class="text-center text-lg font-medium text-gray-800 mb-6"></h3>
+
+            <div id="searchSection" class="max-w-4xl mx-auto">
+                <form id="searchForm" class="bg-white p-6 rounded-lg shadow-xl mb-8 flex flex-wrap gap-4 justify-center">
+                    <input type="text" id="departure" placeholder="Departure City" required class="p-3 border border-gray-300 rounded flex-grow min-w-[150px]">
+                    <input type="text" id="arrival" placeholder="Arrival City" required class="p-3 border border-gray-300 rounded flex-grow min-w-[150px]">
+                    <input type="date" id="date" placeholder="Date (Optional)" class="p-3 border border-gray-300 rounded flex-grow min-w-[150px]">
+                    <button type="submit" class="p-3 bg-blue-500 text-white rounded font-bold hover:bg-blue-600 transition duration-150">Search</button>
+                </form>
+                <div id="resultsContainer"></div>
+            </div>
+
+            <div id="authSection" class="hidden max-w-md mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg">
+                <h3 class="text-2xl font-semibold mb-4 text-center text-blue-700" id="authTitle">Login</h3>
+                <p id="authMessage" class="text-sm text-center text-red-500 mb-4"></p>
+                <form id="authForm">
+                    <div id="nameField" class="mb-4 hidden">
+                        <input type="text" id="authName" placeholder="Full Name" class="w-full p-3 border border-gray-300 rounded focus:ring-blue-500">
+                    </div>
+                    <div class="mb-4">
+                        <input type="email" id="authEmail" placeholder="Email" required class="w-full p-3 border border-gray-300 rounded focus:ring-blue-500">
+                    </div>
+                    <div class="mb-6">
+                        <input type="password" id="authPassword" placeholder="Password" required class="w-full p-3 border border-gray-300 rounded focus:ring-blue-500">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700" id="authSubmitButton">Login</button>
+                </form>
+                <div class="mt-4 text-center text-sm">
+                    <button class="text-blue-500 hover:underline" id="toggleAuthModeBtn">Switch to Register</button>
+                </div>
+            </div>
+
+            <div id="bookingSection" class="hidden max-w-md mx-auto mt-10 p-6 bg-yellow-50 border-2 border-yellow-300 rounded-xl shadow-lg">
+                <h3 class="text-xl font-bold mb-4 text-yellow-800">Confirm Booking</h3>
+                <form id="bookingForm">
+                    <input type="hidden" id="bookingFlightId">
+                    <p id="bookingFlightInfo" class="mb-4 text-sm font-semibold text-gray-700"></p>
+
+                    <input type="text" id="bookingCustomerName" placeholder="Your Full Name" required class="w-full p-3 mb-3 border border-gray-300 rounded">
+                    <input type="email" id="bookingCustomerEmail" placeholder="Your Email" required class="w-full p-3 mb-3 border border-gray-300 rounded">
+                    <input type="number" id="bookingSeatsToBook" placeholder="Number of Seats (Max 5)" min="1" max="5" required class="w-full p-3 mb-6 border border-gray-300 rounded">
+                    <button type="submit" class="w-full bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700">Book Now</button>
+                </form>
+            </div>
+            
+            <div id="ticketSection" class="hidden"></div>
+            
+            <div id="historySection" class="hidden max-w-3xl mx-auto">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6">Your Booking History</h3>
+                <div id="historyContent" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    </div>
+            </div>
+
+        </main>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

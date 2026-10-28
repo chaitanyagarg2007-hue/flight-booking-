@@ -1,0 +1,122 @@
+/* -------------------------------------------------------- */
+/* --- 1. BASE & UTILITY STYLES (Complementing Tailwind) --- */
+/* -------------------------------------------------------- */
+
+/* Ensures the body takes up minimum viewport height and provides a clean base */
+body {
+    min-height: 100vh;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Enhances visual feedback on focus */
+input:focus {
+    /* Focus ring (Tailwind blue-500 equivalent) */
+    outline: 2px solid #3b82f6; 
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 1px #3b82f6;
+}
+
+/* Style for the main container padding */
+.main-content-padding {
+    padding-top: 2rem; /* Adds space below the sticky navbar */
+}
+
+
+/* -------------------------------------------------------- */
+/* --- 2. NAVBAR & HEADER FIXES --- */
+/* -------------------------------------------------------- */
+
+/* Ensures the navbar is clearly visible and sticky */
+.bg-blue-600 {
+    background-color: #2563eb; /* Deeper blue for professional look */
+}
+
+/* Style for the site title/logo */
+#navTitle {
+    letter-spacing: 0.5px;
+    font-weight: 700;
+}
+
+
+/* -------------------------------------------------------- */
+/* --- 3. SEARCH FORM (MakeMyTrip Style Input Group) --- */
+/* -------------------------------------------------------- */
+
+#searchForm {
+    /* Gives the search form a lifted, emphasized look */
+    transform: translateY(0); 
+    z-index: 5;
+    position: relative;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+#searchForm input {
+    /* Consistent look for search inputs */
+    border: none;
+    border-radius: 8px;
+    background-color: #f7f7f7; 
+    transition: background-color 0.3s;
+}
+#searchForm input:hover {
+    background-color: #ffffff;
+    box-shadow: 0 0 0 1px #e0e0e0;
+}
+#searchForm button[type="submit"] {
+    background-color: #ff5722; /* Vibrant orange/red for action */
+}
+#searchForm button[type="submit"]:hover {
+    background-color: #e64a19;
+}
+
+
+/* -------------------------------------------------------- */
+/* --- 4. FLIGHT CARD (Results Display) --- */
+/* ---------------------------------------- */
+
+.flight-card {
+    /* Sharper design for the flight listing */
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    border-left: 5px solid #2563eb; /* Primary color indicator */
+    border-radius: 12px;
+}
+
+.flight-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.flight-card .text-2xl.font-bold.text-blue-800 {
+    font-size: 1.8rem;
+    color: #1e40af; /* Darker blue for departure time */
+}
+
+
+/* -------------------------------------------------------- */
+/* --- 5. TICKET DISPLAY (Confirmation Slip Look) --- */
+/* -------------------------------------------------------- */
+
+.ticket-card {
+    /* Gives the ticket a clean, paper-like look */
+    border: 1px solid #d1d5db; 
+    border-radius: 10px;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+}
+
+/* Price styling in the footer */
+.ticket-card .text-2xl.font-extrabold.text-green-600 {
+    font-size: 2.5rem;
+    color: #10b981;
+}
+
+/* Cancel button danger style */
+#cancelButton {
+    background-color: #dc2626;
+    border-radius: 6px;
+    font-weight: 600;
+}
+#cancelButton:hover {
+    background-color: #b91c1c;
+}
