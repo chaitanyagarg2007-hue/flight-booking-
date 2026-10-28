@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { 
-  TrendingUp, Ticket, CheckCircle, XCircle, Users, Plus, 
-  Plane, RefreshCw, AlertCircle, ShieldCheck, Calendar 
+  TrendingUp, Ticket, CheckCircle, Users, Plus, 
+  Plane, RefreshCw, AlertCircle, ShieldCheck, Edit3, X 
 } from 'lucide-react';
 
 export default function AdminPortal() {
   const [stats, setStats] = useState(null);
   const [allBookings, setAllBookings] = useState([]);
+  const [allFlights, setAllFlights] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -23,8 +24,15 @@ export default function AdminPortal() {
     price: '',
     available_seats: 100
   });
+
+  // Edit Flight Modal state (Fix for Issue #3)
+  const [editingFlight, setEditingFlight] = useState(null);
+  const [editPrice, setEditPrice] = useState('');
+  const [editSeats, setEditSeats] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+
   const [flightSubmitLoading, setFlightSubmitLoading] = useState(false);
-  const [flightSuccessMsg, setFlightSuccessMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
     fetchAdminData();
@@ -34,13 +42,15 @@ export default function AdminPortal() {
     setLoading(true);
     setError('');
     try {
-      const [statsRes, bookingsRes] = await Promise.all([
+      const [statsRes, bookingsRes, flightsRes] = await Promise.all([
         api.get('/admin/stats'),
-        api.get('/admin/bookings')
+        api.get('/admin/bookings'),
+        api.get('/admin/flights')
       ]);
 
       setStats(statsRes.data.overview);
       setAllBookings(bookingsRes.data.bookings || []);
+      setAllFlights(flightsRes.data.flights || []);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load admin analytics. Ensure you are an Admin.');
     } finally {
@@ -63,9 +73,8 @@ export default function AdminPortal() {
         arrival_airport_id: parseInt(newFlight.arrival_airport_id)
       });
 
-      setFlightSuccessMsg(res.data.message || 'Flight scheduled successfully!');
+      setSuccessMsg(res.data.message || 'Flight scheduled successfully!');
       setIsAddFlightOpen(false);
-      // Reset form
       setNewFlight({
         flight_number: '',
         airline_id: 1,
@@ -84,6 +93,28 @@ export default function AdminPortal() {
     }
   };
 
+  // Live PATCH Flight (Fix for Issue #3)
+  const handleUpdateFlight = async (e) => {
+    e.preventDefault();
+    if (!editingFlight) return;
+    setIsUpdating(true);
+
+    try {
+      const res = await api.patch(`/admin/flights/${editingFlight.id}`, {
+        price: parseFloat(editPrice),
+        available_seats: parseInt(editSeats)
+      });
+
+      setSuccessMsg(`✅ Flight ${editingFlight.flight_number} successfully updated!`);
+      setEditingFlight(null);
+      fetchAdminData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update flight.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="text-center py-24">
@@ -94,10 +125,10 @@ export default function AdminPortal() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-6">
+    <div className="max-w-7xl mx-auto py-6 space-y-10">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center space-x-2 text-amber-600 mb-1">
             <ShieldCheck className="w-5 h-5" />
@@ -112,7 +143,7 @@ export default function AdminPortal() {
             className="flex items-center space-x-1.5 text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl border border-slate-200 transition shadow-sm"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Refresh Stats</span>
+            <span>Refresh</span>
           </button>
           
           <button
@@ -125,25 +156,23 @@ export default function AdminPortal() {
         </div>
       </div>
 
-      {flightSuccessMsg && (
-        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-sm font-semibold flex items-center space-x-2">
-          <CheckCircle className="w-5 h-5 text-emerald-600" />
-          <span>{flightSuccessMsg}</span>
+      {successMsg && (
+        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-sm font-semibold flex items-center space-x-2 animate-in fade-in">
+          <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+          <span>{successMsg}</span>
         </div>
       )}
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-sm font-semibold flex items-center space-x-2">
-          <AlertCircle className="w-5 h-5" />
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-sm font-semibold flex items-center space-x-2">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* KPI Cards Grid */}
+      {/* KPI Cards */}
       {stats && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
-          
-          {/* Revenue Card */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm flex items-center space-x-4">
             <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center font-black">
               <TrendingUp className="w-7 h-7" />
@@ -151,11 +180,10 @@ export default function AdminPortal() {
             <div>
               <p className="text-xs font-bold text-slate-400 uppercase">Gross Revenue</p>
               <h3 className="text-2xl font-black text-slate-900 mt-0.5">₹{parseFloat(stats.totalRevenue).toLocaleString('en-IN')}</h3>
-              <p className="text-[11px] text-emerald-600 font-semibold">Realized confirmed fares</p>
+              <p className="text-[11px] text-emerald-600 font-semibold">Historical snapshot verified</p>
             </div>
           </div>
 
-          {/* Total Bookings Card */}
           <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm flex items-center space-x-4">
             <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black">
               <Ticket className="w-7 h-7" />
@@ -167,7 +195,6 @@ export default function AdminPortal() {
             </div>
           </div>
 
-          {/* Confirmed vs Cancelled */}
           <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm flex items-center space-x-4">
             <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center font-black">
               <CheckCircle className="w-7 h-7" />
@@ -175,28 +202,84 @@ export default function AdminPortal() {
             <div>
               <p className="text-xs font-bold text-slate-400 uppercase">Status Breakdown</p>
               <h3 className="text-xl font-black text-slate-900 mt-0.5">
-                <span className="text-emerald-600">{stats.confirmedBookings} Active</span> / <span className="text-rose-600">{stats.cancelledBookings} Canc.</span>
+                <span className="text-emerald-600">{stats.confirmedBookings} Act.</span> / <span className="text-rose-600">{stats.cancelledBookings} Canc.</span>
               </h3>
-              <p className="text-[11px] text-slate-400 font-semibold">Soft-cancelled preservation</p>
+              <p className="text-[11px] text-slate-400 font-semibold">Soft-cancelled audit</p>
             </div>
           </div>
 
-          {/* Customers Card */}
           <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm flex items-center space-x-4">
             <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center font-black">
               <Users className="w-7 h-7" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-400 uppercase">Registered Passengers</p>
+              <p className="text-xs font-bold text-slate-400 uppercase">Registered Customers</p>
               <h3 className="text-2xl font-black text-slate-900 mt-0.5">{stats.totalCustomers}</h3>
-              <p className="text-[11px] text-purple-600 font-semibold">Authenticated user accounts</p>
+              <p className="text-[11px] text-purple-600 font-semibold">Active user accounts</p>
             </div>
           </div>
-
         </div>
       )}
 
-      {/* Bookings Audit Table */}
+      {/* --- Section 2: Manage Scheduled Flights (Issue #3 Fix) --- */}
+      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+          <div>
+            <h2 className="text-lg font-black text-slate-900">Manage Active Flight Inventory</h2>
+            <p className="text-xs text-slate-400">Update flight fares or available seat counts on the fly</p>
+          </div>
+          <span className="text-xs font-bold bg-amber-50 text-amber-800 px-3 py-1 rounded-full border border-amber-200">
+            {allFlights.length} Scheduled Flights
+          </span>
+        </div>
+
+        <div className="overflow-x-auto max-h-80">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 text-slate-400 font-bold uppercase tracking-wider sticky top-0 border-b border-slate-100">
+              <tr>
+                <th className="py-3 px-6">Flight</th>
+                <th className="py-3 px-6">Airline</th>
+                <th className="py-3 px-6">Route</th>
+                <th className="py-3 px-6">Departure</th>
+                <th className="py-3 px-6">Fare</th>
+                <th className="py-3 px-6">Seats Left</th>
+                <th className="py-3 px-6 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+              {allFlights.map((f) => (
+                <tr key={f.id} className="hover:bg-slate-50/80 transition">
+                  <td className="py-3.5 px-6 font-bold text-slate-900">{f.flight_number}</td>
+                  <td className="py-3.5 px-6">{f.airline}</td>
+                  <td className="py-3.5 px-6 font-semibold">{f.departure_city} → {f.arrival_city}</td>
+                  <td className="py-3.5 px-6 text-slate-400">{f.departure_time?.substring(0, 16).replace('T', ' ')}</td>
+                  <td className="py-3.5 px-6 font-bold text-slate-900">₹{parseFloat(f.price).toLocaleString('en-IN')}</td>
+                  <td className="py-3.5 px-6 font-semibold">
+                    <span className={f.available_seats < 10 ? 'text-orange-600 font-bold' : 'text-slate-800'}>
+                      {f.available_seats} seats
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-6 text-right">
+                    <button
+                      onClick={() => {
+                        setEditingFlight(f);
+                        setEditPrice(f.price);
+                        setEditSeats(f.available_seats);
+                      }}
+                      className="inline-flex items-center space-x-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-[11px] transition"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Edit</span>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* --- Section 3: Passenger Bookings Audit Table --- */}
       <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-100 flex justify-between items-center">
           <div>
@@ -213,7 +296,7 @@ export default function AdminPortal() {
             <thead className="bg-slate-50 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
               <tr>
                 <th className="py-3.5 px-6">Ref ID</th>
-                <th className="py-3.5 px-6">Passenger Details</th>
+                <th className="py-3.5 px-6">Passenger</th>
                 <th className="py-3.5 px-6">Flight</th>
                 <th className="py-3.5 px-6">Route</th>
                 <th className="py-3.5 px-6">Seats</th>
@@ -238,7 +321,7 @@ export default function AdminPortal() {
                     {b.departure_city} → {b.arrival_city}
                   </td>
                   <td className="py-4 px-6">{b.seats_booked}</td>
-                  <td className="py-4 px-6 font-bold text-emerald-600">₹{b.total_price}</td>
+                  <td className="py-4 px-6 font-bold text-emerald-600">₹{parseFloat(b.total_price).toLocaleString('en-IN')}</td>
                   <td className="py-4 px-6">
                     {b.status === 'CONFIRMED' ? (
                       <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-1 rounded-full">
@@ -260,11 +343,64 @@ export default function AdminPortal() {
         </div>
       </div>
 
+      {/* --- Edit Flight Modal (Issue #3) --- */}
+      {editingFlight && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 sm:p-8 relative animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-lg font-black text-slate-900">Edit Flight {editingFlight.flight_number}</h3>
+                <p className="text-xs text-slate-400">{editingFlight.departure_city} → {editingFlight.arrival_city}</p>
+              </div>
+              <button 
+                onClick={() => setEditingFlight(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateFlight} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Fare (₹)</label>
+                <input
+                  type="number"
+                  required
+                  value={editPrice}
+                  onChange={(e) => setEditPrice(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Available Seats</label>
+                <input
+                  type="number"
+                  required
+                  value={editSeats}
+                  onChange={(e) => setEditSeats(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl transition shadow-md shadow-amber-500/20 disabled:opacity-50"
+                >
+                  {isUpdating ? 'Updating Flight...' : 'Save & Update Flight'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* --- Schedule Flight Modal --- */}
       {isAddFlightOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white w-full max-w-xl rounded-3xl shadow-2xl p-6 sm:p-8 relative animate-in fade-in zoom-in duration-200">
-            
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center space-x-3">
                 <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
@@ -272,14 +408,14 @@ export default function AdminPortal() {
                 </div>
                 <div>
                   <h2 className="text-xl font-black text-slate-900">Schedule New Flight</h2>
-                  <p className="text-xs text-slate-400">Add a dynamic route to inventory</p>
+                  <p className="text-xs text-slate-400">Add dynamic route to inventory</p>
                 </div>
               </div>
               <button 
                 onClick={() => setIsAddFlightOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-lg font-bold"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -378,7 +514,7 @@ export default function AdminPortal() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Total Available Seats</label>
+                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Available Seats</label>
                 <input
                   type="number"
                   required
@@ -398,7 +534,6 @@ export default function AdminPortal() {
                 </button>
               </div>
             </form>
-
           </div>
         </div>
       )}

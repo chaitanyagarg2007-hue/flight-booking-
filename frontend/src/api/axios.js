@@ -1,13 +1,14 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  // Deployment ready: Uses environment variable in production, falls back to localhost:5000 in dev
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request Interceptor: Automatically attach JWT token to every request
+// Request Interceptor: Automatically attach JWT token to every outgoing request
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
